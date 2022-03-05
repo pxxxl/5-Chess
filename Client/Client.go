@@ -15,12 +15,12 @@ func main() {
 	conn, err1 := net.Dial("tcp", ipAndPort)
 	if err1 != nil {
 		fmt.Printf("conn server failed, err:%v\n", err1)
-		return
+		exitConsole()
 	}
 	_, err2 :=conn.Read(buf[:])
 	if err2 != nil {
 		fmt.Printf("read failed, err:%v\n", err2)
-		return
+		exitConsole()
 	}
 	if buf[0] == '2'{
 		colorFlag = -1
@@ -33,8 +33,8 @@ func main() {
 		clearScreen()
 		printChess(chess)
 		if err3 != nil {
-			fmt.Printf("read failed, err:%v\n", err2)
-			return
+			fmt.Printf("read from the server failed, no chessboard information, err:%v\n", err3)
+			exitConsole()
 		}
 		switch buf[0]{
 		case '0':
@@ -43,7 +43,7 @@ func main() {
 				_, err4 :=conn.Write([]byte("1"+ret))
 				if err4 != nil {
 					fmt.Printf("send failed, err:%v\n", err4)
-					return
+					exitConsole()
 				}
 				waitingInformation()
 			}else{
@@ -56,7 +56,7 @@ func main() {
 				_, err4 :=conn.Write([]byte("2"+ret))
 				if err4 != nil {
 					fmt.Printf("send failed, err:%v\n", err4)
-					return
+					exitConsole()
 				}
 				waitingInformation()
 			}else{
@@ -69,7 +69,7 @@ func main() {
 				_, err4 :=conn.Write([]byte("1"+ret))
 				if err4 != nil {
 					fmt.Printf("send failed, err:%v\n", err4)
-					return
+					exitConsole()
 				}
 				waitingInformation()
 			}else{
@@ -235,4 +235,16 @@ func clearScreen(){
 
 func waitingInformation(){
 	fmt.Println("请等待。。。")
+}
+
+func exitConsole(){
+	var exit rune
+	for{
+		fmt.Scan(&exit)
+		if exit == 'q'{
+			os.Exit(1)
+		}
+	}
+
+
 }

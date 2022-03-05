@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 	"time"
 )
 
@@ -13,34 +14,34 @@ func main() {
 	listen, err1 := net.Listen("tcp", "10.19.190.109:8098")
 	if err1 != nil{
 		fmt.Println("Listener build failed")
-		return
+		exitConsole()
 	}
 	conn1, err2 := listen.Accept()
 	if err2 != nil {
-		fmt.Printf("accept failed, err:%v\n", err2)
-		return
+		fmt.Printf("accept from conn1 failed, err:%v\n", err2)
+		exitConsole()
 	}
 	fmt.Println("链接完成，链接信息如下：")
 	fmt.Println("白方:"+conn1.RemoteAddr().String())
 	_, err3 := conn1.Write([]byte("100"))
 	if err3 != nil {
-		fmt.Printf("accept failed, err:%v\n", err3)
-		return
+		fmt.Printf("distribute white failed, err:%v\n", err3)
+		exitConsole()
 	}
 	conn2, err4 := listen.Accept()
 	if err4 != nil {
-		fmt.Printf("accept failed, err:%v\n", err4)
-		return
+		fmt.Printf("accept from conn2 failed, err:%v\n", err4)
+		exitConsole()
 	}
 	fmt.Println("链接完成，链接信息如下：")
 	fmt.Println("黑方:"+conn2.RemoteAddr().String())
 	_, err5 := conn2.Write([]byte("200"))
 	if err5 != nil {
-		fmt.Printf("accept failed, err:%v\n", err5)
-		return
+		fmt.Printf("distribute black failed, err:%v\n", err5)
+		exitConsole()
 	}
 	fmt.Println("游戏马上开始")
-	time.Sleep(3*time.Second)
+	time.Sleep(1*time.Second)
 	roundFlag = 1
 	sendMsg("000",conn1, conn2)
 	//开始持续接收信息
@@ -48,8 +49,8 @@ func main() {
 		if roundFlag == 1{
 			_, err6 := conn1.Read(buf[:])
 			if err6 != nil{
-				fmt.Printf("accept failed, err:%v\n", err6)
-				return
+				fmt.Printf("accept chess message failed, err:%v\n", err6)
+				exitConsole()
 			}
 			chess[buf[1]-'a'][buf[2]-'A'] = 1
 			win := checkWin(1,int(buf[1]-'a'),int(buf[2]-'A'),chess)
@@ -61,8 +62,8 @@ func main() {
 		}else{
 			_, err6 := conn2.Read(buf[:])
 			if err6 != nil{
-				fmt.Printf("accept failed, err:%v\n", err6)
-				return
+				fmt.Printf("accept chess message failed, err:%v\n", err6)
+				exitConsole()
 			}
 			chess[buf[1]-'a'][buf[2]-'A'] = -1
 			win := checkWin(-1,int(buf[1]-'a'),int(buf[2]-'A'),chess)
@@ -80,12 +81,12 @@ func sendMsg(str string,a net.Conn, b net.Conn){
 	_, e1 := a.Write([]byte(str))
 	_, e2 := b.Write([]byte(str))
 	if e1!=nil{
-		fmt.Printf("accept failed, err:%v\n", e1)
-		return
+		fmt.Printf("sendMsg failed, err:%v\n", e1)
+		exitConsole()
 	}
 	if e2!=nil{
-		fmt.Printf("accept failed, err:%v\n", e2)
-		return
+		fmt.Printf("sendMsg failed, err:%v\n", e2)
+		exitConsole()
 	}
 
 }
@@ -124,4 +125,16 @@ func checkLine(color int, x int, y int, chess[15][15]int, xBios int, yBios int)b
 	}else{
 		return false
 	}
+}
+
+func exitConsole(){
+	var exit rune
+	for{
+		fmt.Scan(&exit)
+		if exit == 'q'{
+			os.Exit(1)
+		}
+	}
+
+
 }
