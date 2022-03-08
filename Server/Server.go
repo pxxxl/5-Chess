@@ -7,39 +7,26 @@ import (
 	"time"
 )
 
+var debugger = initDebugger()
+
 func main() {
 	chess := [15][15]int{}
 	roundFlag := 0
 	buf := [1024]byte{}
-	listen, err1 := net.Listen("tcp", "10.19.190.109:8098")
-	if err1 != nil{
-		fmt.Println("Listener build failed")
-		exitConsole()
-	}
+	listen, err1 := net.Listen("tcp", "127.0.0.1:8098")
+	Handle(err1)
 	conn1, err2 := listen.Accept()
-	if err2 != nil {
-		fmt.Printf("accept from conn1 failed, err:%v\n", err2)
-		exitConsole()
-	}
+	Handle(err2)
 	fmt.Println("链接完成，链接信息如下：")
 	fmt.Println("白方:"+conn1.RemoteAddr().String())
 	_, err3 := conn1.Write([]byte("100"))
-	if err3 != nil {
-		fmt.Printf("distribute white failed, err:%v\n", err3)
-		exitConsole()
-	}
+	Handle(err3)
 	conn2, err4 := listen.Accept()
-	if err4 != nil {
-		fmt.Printf("accept from conn2 failed, err:%v\n", err4)
-		exitConsole()
-	}
+	Handle(err4)
 	fmt.Println("链接完成，链接信息如下：")
 	fmt.Println("黑方:"+conn2.RemoteAddr().String())
 	_, err5 := conn2.Write([]byte("200"))
-	if err5 != nil {
-		fmt.Printf("distribute black failed, err:%v\n", err5)
-		exitConsole()
-	}
+	Handle(err5)
 	fmt.Println("游戏马上开始")
 	time.Sleep(1*time.Second)
 	roundFlag = 1
@@ -48,32 +35,32 @@ func main() {
 	for{
 		if roundFlag == 1{
 			_, err6 := conn1.Read(buf[:])
-			if err6 != nil{
-				fmt.Printf("accept chess message failed, err:%v\n", err6)
-				exitConsole()
-			}
+			Handle(err6)
 			chess[buf[1]-'a'][buf[2]-'A'] = 1
+			debug(fmt.Sprintf("棋子颜色已设置，现在白方下 %c %c ",rune(buf[1]),rune(buf[2])))
 			win := checkWin(1,int(buf[1]-'a'),int(buf[2]-'A'),chess)
 			if win{
 				sendMsg("3"+string(buf[1])+string(buf[2]),conn1,conn2)
 			}else{
 				sendMsg("1"+string(buf[1])+string(buf[2]),conn1,conn2)
 			}
+			debug("检查完成")
 		}else{
 			_, err6 := conn2.Read(buf[:])
-			if err6 != nil{
-				fmt.Printf("accept chess message failed, err:%v\n", err6)
-				exitConsole()
-			}
+			Handle(err6)
 			chess[buf[1]-'a'][buf[2]-'A'] = -1
+			debug(fmt.Sprintf("棋子颜色已设置，现在黑方下 %c %c ",rune(buf[1]),rune(buf[2])))
 			win := checkWin(-1,int(buf[1]-'a'),int(buf[2]-'A'),chess)
+			debug(fmt.Sprintf("棋子颜色已设置，现在黑方下 %c %c ",rune(buf[1]),rune(buf[2])))
 			if win{
 				sendMsg("4"+string(buf[1])+string(buf[2]),conn1,conn2)
 			}else{
 				sendMsg("2"+string(buf[1])+string(buf[2]),conn1,conn2)
 			}
+			debug("检查完成")
 		}
 		roundFlag = -roundFlag
+		debug("更换双方")
 	}
 }
 
@@ -93,12 +80,14 @@ func sendMsg(str string,a net.Conn, b net.Conn){
 
 func checkWin(color int,x int, y int, chess [15][15]int)bool{
 	winFlag := false
+	debug("winFlag set")
 	switch{
 	case checkLine(color,x,y,chess,1,0):winFlag = true
 	case checkLine(color,x,y,chess,0,1):winFlag = true
 	case checkLine(color,x,y,chess,1,1):winFlag = true
 	case checkLine(color,x,y,chess,1,-1):winFlag = true
 	}
+	debug("check done")
 	return winFlag
 }
 
@@ -111,15 +100,18 @@ func checkLine(color int, x int, y int, chess[15][15]int, xBios int, yBios int)b
 			break
 		}
 	}
+	debug("1checkLine done")
 	xBios = -xBios
 	yBios = -yBios
 	for{
+
 		if chess[x+xBios][y+yBios] == color{
 			counter++
 		}else{
 			break
 		}
 	}
+	debug("2checkLine done")
 	if counter >= 5{
 		return true
 	}else{
@@ -137,4 +129,22 @@ func exitConsole(){
 	}
 
 
+}
+
+func initDebugger()net.Conn{
+	conn, err := net.Dial("tcp", "127.0.0.1:3000")
+	Handle(err)
+	return conn
+}
+
+func debug(str string){
+	_ ,err := debugger.Write([]byte(str))
+	Handle(err)
+}
+
+func Handle(err error){
+	if err != nil{
+		fmt.Println(err)
+		exitConsole()
+	}
 }

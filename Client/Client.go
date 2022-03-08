@@ -9,7 +9,7 @@ import (
 func main() {
 	var colorFlag int
 	var ipAndPort string
-	ipAndPort = "10.19.190.109:8098"
+	ipAndPort = "127.0.0.1:8098"
 	chess := [15][15]int{}
 	var buf [1024]byte
 	conn, err1 := net.Dial("tcp", ipAndPort)
