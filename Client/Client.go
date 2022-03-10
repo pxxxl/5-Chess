@@ -13,15 +13,9 @@ func main() {
 	chess := [15][15]int{}
 	var buf [1024]byte
 	conn, err1 := net.Dial("tcp", ipAndPort)
-	if err1 != nil {
-		fmt.Printf("conn server failed, err:%v\n", err1)
-		exitConsole()
-	}
+	Handle(err1)
 	_, err2 :=conn.Read(buf[:])
-	if err2 != nil {
-		fmt.Printf("read failed, err:%v\n", err2)
-		exitConsole()
-	}
+	Handle(err2)
 	if buf[0] == '2'{
 		colorFlag = -1
 	}else{
@@ -32,45 +26,37 @@ func main() {
 		_, err3 :=conn.Read(buf[:])
 		clearScreen()
 		printChess(chess)
-		if err3 != nil {
-			fmt.Printf("read from the server failed, no chessboard information, err:%v\n", err3)
-			exitConsole()
-		}
+		Handle(err3)
 		switch buf[0]{
 		case '0':
 			if colorFlag == 1{
 				ret := getCommand(1,chess)
 				_, err4 :=conn.Write([]byte("1"+ret))
-				if err4 != nil {
-					fmt.Printf("send failed, err:%v\n", err4)
-					exitConsole()
-				}
+				Handle(err4)
 				waitingInformation()
 			}else{
 				waitingInformation()
 			}
 		case '1':
 			chess[buf[1]-'a'][buf[2]-'A'] = 1
+			clearScreen()
+			printChess(chess)
 			if colorFlag == -1{
 				ret := getCommand(-1,chess)
 				_, err4 :=conn.Write([]byte("2"+ret))
-				if err4 != nil {
-					fmt.Printf("send failed, err:%v\n", err4)
-					exitConsole()
-				}
+				Handle(err4)
 				waitingInformation()
 			}else{
 				waitingInformation()
 			}
 		case '2':
 			chess[buf[1]-'a'][buf[2]-'A'] = -1
+			clearScreen()
+			printChess(chess)
 			if colorFlag == 1{
 				ret := getCommand(1,chess)
 				_, err4 :=conn.Write([]byte("1"+ret))
-				if err4 != nil {
-					fmt.Printf("send failed, err:%v\n", err4)
-					exitConsole()
-				}
+				Handle(err4)
 				waitingInformation()
 			}else{
 				waitingInformation()
@@ -80,13 +66,13 @@ func main() {
 			clearScreen()
 			printChess(chess)
 			fmt.Println("白方胜！")
-			os.Exit(0)
+			exitConsole()
 		case '4':
 			chess[buf[1]-'a'][buf[2]-'A'] = -1
 			clearScreen()
 			printChess(chess)
 			fmt.Println("黑方胜！")
-			os.Exit(0)
+			exitConsole()
 		}
 	}
 }
@@ -247,4 +233,11 @@ func exitConsole(){
 	}
 
 
+}
+
+func Handle(err error){
+	if err != nil{
+		fmt.Println(err)
+		exitConsole()
+	}
 }

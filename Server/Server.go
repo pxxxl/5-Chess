@@ -93,19 +93,28 @@ func checkWin(color int,x int, y int, chess [15][15]int)bool{
 
 func checkLine(color int, x int, y int, chess[15][15]int, xBios int, yBios int)bool{
 	counter := 1
+	reach := 1
 	for{
-		if chess[x+xBios][y+yBios] == color{
+		if x+xBios*reach<0||x+xBios*reach>=15||y+yBios*reach<0||y+yBios*reach>=15{
+			break
+		}
+		if chess[x+xBios*reach][y+yBios*reach] == color{
+			reach++
 			counter++
 		}else{
 			break
 		}
 	}
 	debug("1checkLine done")
+	reach = 1
 	xBios = -xBios
 	yBios = -yBios
 	for{
-
-		if chess[x+xBios][y+yBios] == color{
+		if x+xBios*reach<0||x+xBios*reach>=15||y+yBios*reach<0||y+yBios*reach>=15{
+			break
+		}
+		if chess[x+xBios*reach][y+yBios*reach] == color{
+			reach++
 			counter++
 		}else{
 			break
